@@ -3,6 +3,10 @@ import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 
 import CSS from '../views/CSS.vue'
+import Blog from '../views/Blog.vue'
+import Games from "../views/Games.vue"
+
+import NotFound from '../views/NotFound.vue'
 
 Vue.use(VueRouter)
 
@@ -24,6 +28,26 @@ const routes = [
     path: '/css',
     name: 'CSS',
     component: CSS
+  },
+  {
+    path: '/blog',
+    name: 'Blog',
+    component: Blog
+  },
+  {
+    path: "/games",
+    name: "Games",
+    component: Games
+  },
+
+
+
+  {
+    // 404-Error-Page
+    // muss am Ende stehen
+    path: "/*",
+    name: "404 - Not Found",
+    component: NotFound
   }
 ]
 
