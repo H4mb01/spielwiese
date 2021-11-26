@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/precache-manifest.e67e622a598a262fde9a1db8869480e8.js"
+  "/precache-manifest.64a916a3f424731455bd734ac09f294b.js"
 );
 
 workbox.core.setCacheNameDetails({prefix: "spielwiese"});
