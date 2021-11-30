@@ -5,6 +5,7 @@ import Home from '../views/Home.vue'
 import CSS from '../views/CSS.vue'
 import Blog from '../views/Blog.vue'
 import Games from "../views/Games.vue"
+import Beobachtungsbogen from "../views/Beobachtungsboegen.vue"
 
 import NotFound from '../views/NotFound.vue'
 
@@ -38,6 +39,11 @@ const routes = [
     path: "/games",
     name: "Games",
     component: Games
+  },
+  {
+    path: "/beobachtungsboegen",
+    name: "Beobachtungsbögen",
+    component: Beobachtungsbogen
   },
 
 
