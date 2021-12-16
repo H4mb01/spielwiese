@@ -1,33 +1,99 @@
 <template>
     <div class="beobachtungsboegen">
-        <h1>Beobachtungsbögen</h1>
-        <input type="text" name="neu" id="neu" v-if="showNeu">
-        <button class="button" @click="showNeu = showNeu ? false : true">neu</button>
-        <br>
-        <button @click="showBeobachtungsbogen = showBeobachtungsbogen ? false : true" >show</button>
-        <button @click="showBeschreibungen = showBeschreibungen ? false : true" >Beschreibungen ein-/ausblenden</button>
-        <Beobachtungsbogen v-if="showBeobachtungsbogen" :bildungsbereiche="bildungsbereiche" :showBeschreibungen="showBeschreibungen" />
+        <h1> {{ username }}s Beobachtungsbögen</h1>
+        <div class="content">
+            <Kinder :kinder="kinder" v-on:click-kind="showKind($event)" />
+            <button @click="showBeobachtungsbogen = showBeobachtungsbogen ? false : true" >show</button>
+            <button @click="showBeschreibungen = showBeschreibungen ? false : true" >Beschreibungen ein-/ausblenden</button>
+            <button @click="logout()" >logout</button>
+            <button @click="change = change ? false : true">change</button>
+            <Beobachtungsbogen v-if="showBeobachtungsbogen" :kind="kind" :bildungsbereiche="bildungsbereiche" :showBeschreibungen="showBeschreibungen"
+            :change="change" />
+            <button @click="saveChanges()">save</button>
+        </div>
     </div>
 </template>
 
 <script>
 import Beobachtungsbogen from "../components/beobachtungsboegen/Beobachtungsbogen.vue"
+import Kinder from "../components/beobachtungsboegen/Kinder.vue"
 
 import jsondata from "../json/bildungsbereiche.json"
 export default {
     name: "beobachtungsboegen",
     components: {
-        Beobachtungsbogen
+        Beobachtungsbogen,
+        Kinder
     },
     data() {
         return {
+            accessToken: "",
             showNeu: false,
             showBeobachtungsbogen: false,
             showBeschreibungen: false,
             bildungsbereiche: jsondata.Bildungsbereiche,
+            change: false,
+            username: "",
+            kinder: ["Max", "Moritz", "Julia", "Eva"],
+            kind: ""
         }
-    }
+    },
+    async mounted() {
+        if(this.$session.get("accessToken")){
+            this.accessToken = this.$session.get("accessToken")
+        }
+        const auth = await this.isAuthenticated()
+        console.log("auth:", auth)
+        if(auth === false){
+            this.$router.push("/beobachtungsboegen/login")
+        }
+        this.username = this.$session.get("username")
 
+    },
+    methods: {
+        setTokenToSessionStorage(token){
+            this.$session.set("accessToken", token.accessToken)
+        },
+        async isAuthenticated(){
+            let auth = false
+            try {
+                await fetch("https://beobachtungsboegen.herokuapp.com/auth", {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${this.$session.get('accessToken')}`
+                    }
+                })
+                .then(res => res.json())
+                .then(data => auth = data.auth)
+            } catch (e) {
+                console.log(e)
+            }
+            return auth
+        },
+        async logout() {
+            console.log("logging out", this.$session.get('username'))
+            await fetch("https://beobachtungsboegen.herokuapp.com/logout", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: this.$session.get('username')
+                })
+            })
+            this.$session.remove("username")
+            this.$session.remove("accessToken")
+            this.$session.remove("refreshToken")
+            this.$router.push("beobachtungsboegen/login")
+        },
+        async saveChanges(){
+            console.log("save!!")
+        },
+        showKind(event){
+            this.showBeobachtungsbogen = true
+            this.kind = event
+        }
+    },
 }
 </script>
 

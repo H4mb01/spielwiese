@@ -15,12 +15,16 @@
             </h2>
             <div v-for="eintrag in bildungsbereich" :key="eintrag.id" @click="toggleEintragClr(name, eintrag.id)" class="eintrag"
                 :class="{
-                    eins: ( eintrag['erfüllt'] && name === 'Hören, Sehen, Verstehen'), 
-                    zwei: ( eintrag['erfüllt'] && name === 'Sprechen'), 
-                    drei: ( eintrag['erfüllt'] && name === 'Bewegung, Geschicklichkeit'), 
-                    vier: ( eintrag['erfüllt'] && name === 'Körperkontrolle'),
-                    fünf: ( eintrag['erfüllt'] && name === 'Emotionalität, Soziales Miteinander' ),
-                    sechs: ( eintrag['erfüllt'] && name === 'Denken')
+                    eins: ( name === 'Hören, Sehen, Verstehen'), 
+                    zwei: (  name === 'Sprechen'), 
+                    drei: (  name === 'Bewegung, Geschicklichkeit'), 
+                    vier: (  name === 'Körperkontrolle'),
+                    fünf: (  name === 'Emotionalität, Soziales Miteinander' ),
+                    sechs: ( name === 'Denken'),
+                    nichtErfuellt: (eintrag['erfüllt'] === 0 || !eintrag['erfüllt']),
+                    teilsErfuellt: (eintrag['erfüllt'] === 1),
+                    vollErfuellt: (eintrag['erfüllt'] === 2),
+                    change: change
                 }" >
                 <span class="id"> {{ eintrag.id }} </span>
                 <span class="beschreibung" v-if="showBeschreibungen"> {{ eintrag.beschreibung }} </span>
@@ -35,27 +39,45 @@ export default {
     data() {
         return {
             rerender: 0,
+            kindData: {}
         }
     },
     props: {
         kind: String,
         bildungsbereiche: Object,
-        showBeschreibungen: Boolean
+        showBeschreibungen: Boolean,
+        change: Boolean,
     },
-    mounted(){
+    async mounted(){
         for(const bildungsbereich of Object.entries(this.bildungsbereiche)){
             for(let eintrag of Object.entries(bildungsbereich)){
-                eintrag["erfüllt"] = false
+                eintrag["erfüllt"] = 0
             }
         }
-        console.log(this.bildungsbereiche)
+        try {
+            await fetch(`https://beobachtungsboegen.herokuapp.com/child/${this.kind}`, {
+                method: "GET",
+                Authorization: `Bearer ${this.$session.get("accessToken")}`
+            })
+            .then(res => console.log(res))
+            .then(data => this.kindData = data)
+            console.log(this.kindData)
+        } catch(e) {
+           console.log(e) 
+        }
     },
     methods: {
         toggleEintragClr(name, id){
-            if(this.bildungsbereiche[name].find(e => e['id'] === id)["erfüllt"]){
-                this.bildungsbereiche[name].find(e=> e['id'] === id)["erfüllt"] = false
-            } else {  
-                this.bildungsbereiche[name].find(e=> e['id'] === id)["erfüllt"] = true
+            if(!this.change){return 0}
+            let entry = this.bildungsbereiche[name].find(e => e['id'] === id)['erfüllt']
+            if(entry){
+                switch(entry){
+                    case 0: this.bildungsbereiche[name].find(e => e['id'] === id)['erfüllt'] = 1; break;
+                    case 1: this.bildungsbereiche[name].find(e => e['id'] === id)['erfüllt'] = 2; break;
+                    case 2: this.bildungsbereiche[name].find(e => e['id'] === id)['erfüllt'] = 0; break;
+                }
+            } else {
+                this.bildungsbereiche[name].find(e => e['id'] === id)['erfüllt'] = 1;
             }
             this.rerender +=1;
         }
@@ -69,6 +91,7 @@ export default {
 
 <style scoped>
 * {
+    --clr-bb-000: white;
     --clr-bb-100: red;
     --clr-bb-200: lightgreen;
     --clr-bb-300: orange;
@@ -76,27 +99,39 @@ export default {
     --clr-bb-500: pink;
     --clr-bb-600: lightblue;
 }
-.bereichTitle {
-    background-color: grey;
-}
 .eins {
-    background-color: var(--clr-bb-100);
+    --clr-bb-eintrag: var(--clr-bb-100);
 }
 .zwei {
-    background-color: var(--clr-bb-200);
+    --clr-bb-eintrag: var(--clr-bb-200);
 }
 .drei {
-    background-color: var(--clr-bb-300);
+    --clr-bb-eintrag: var(--clr-bb-300);
 }
 .vier {
-    background-color: var(--clr-bb-400);
+    --clr-bb-eintrag: var(--clr-bb-400);
 }
 .fünf {
-    background-color: var(--clr-bb-500);
+    --clr-bb-eintrag: var(--clr-bb-500);
 }
 .sechs {
-    background-color: var(--clr-bb-600);
+    --clr-bb-eintrag: var(--clr-bb-600);
 }
+.bereichTitle {
+    background-color: var(--clr-bb-eintrag);
+}
+
+.nichtErfuellt {
+    --clr-bb-eintrag: var(--clr-bb-000);
+}
+.teilsErfuellt {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient( .125turn, var(--clr-bb-eintrag) 0%, var(--clr-bb-eintrag) 50%, var(--clr-bb-000) 50%, var(--clr-bb-000) 100%) !important;
+}
+
+
+
 
 
 
@@ -106,6 +141,7 @@ export default {
 
 
 .eintrag {
+    background: var(--clr-bb-eintrag);
     display: inline-block;
     font-weight: bold;
     padding: 5px;
@@ -114,9 +150,11 @@ export default {
     border-radius: 3px;
     vertical-align: top;
     user-select: none;
-    cursor: pointer;
     min-width: 3ch;
     text-align: center;
+}
+.change{
+    cursor: pointer;
 }
 .bildungsbereich {
     display: inline-block;

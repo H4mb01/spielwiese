@@ -6,8 +6,10 @@ import CSS from '../views/CSS.vue'
 import Blog from '../views/Blog.vue'
 import Games from "../views/Games.vue"
 import Beobachtungsbogen from "../views/Beobachtungsboegen.vue"
+import BBLogin from "../views/BBLogin.vue"
 
 import NotFound from '../views/NotFound.vue'
+
 
 Vue.use(VueRouter)
 
@@ -44,6 +46,11 @@ const routes = [
     path: "/beobachtungsboegen",
     name: "Beobachtungsbögen",
     component: Beobachtungsbogen
+  },
+  {
+    path: "/beobachtungsboegen/login",
+    name: "Login",
+    component: BBLogin
   },
 
 
